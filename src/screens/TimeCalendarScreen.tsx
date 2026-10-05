@@ -352,9 +352,13 @@ export function TimeCalendarScreen(_props: TimeCalendarScreenProps) {
                 <Text style={styles.timeLabel}>
                   {formatDuration(entry.durationMinutes)}
                 </Text>
+                <View style={styles.gutterTick} />
               </View>
 
-              <View style={styles.eventBlock}>
+              <View
+                style={styles.eventBlock}
+                testID={`calendar-agenda-card-${entry.id}`}
+              >
                 <View style={styles.eventBody}>
                   <Text style={styles.eventCategory}>{entry.category}</Text>
                   <Text style={styles.eventTitle}>{entry.title}</Text>
@@ -499,10 +503,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 34,
   },
   dateSeparator: {
-    fontFamily: fontFamily.heading,
-    fontSize: 11,
-    lineHeight: 12,
-    letterSpacing: 0.3,
+    ...type.ubuntu11,
     color: colors.black,
     opacity: 0.44,
     marginBottom: space.s5,
@@ -526,6 +527,14 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     letterSpacing: 0.3,
     color: colors.black,
+  },
+  /* The 22×1 #707070 tick the frame draws at 18% under every gutter label. */
+  gutterTick: {
+    width: 22,
+    height: 1,
+    marginTop: 'auto',
+    marginBottom: 30,
+    backgroundColor: 'rgba(112, 112, 112, 0.18)',
   },
   eventBlock: {
     flex: 1,

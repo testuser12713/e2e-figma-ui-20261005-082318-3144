@@ -17,7 +17,6 @@ import { DashboardStackParamList, RootTabParamList } from '../navigation/types';
 import { useAppData } from '../state/AppData';
 import {
   colors,
-  fontFamily,
   formatAmount,
   radius,
   screenInset,
@@ -115,26 +114,30 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
         </View>
 
         <View testID="dashboard-summary" style={styles.summary}>
-          <Metric
-            label="Balance"
-            value={formatAmount(totals.balance)}
-            testID="dashboard-balance"
-          />
-          <Metric
-            label="Income"
-            value={formatAmount(totals.income)}
-            testID="dashboard-income"
-          />
-          <Metric
-            label="Expenses"
-            value={formatAmount(totals.expenses)}
-            testID="dashboard-expenses"
-          />
-          <Metric
-            label="Tracked Time"
-            value={formatDuration(totals.totalMinutes)}
-            testID="dashboard-time"
-          />
+          <View style={styles.summaryRow}>
+            <Metric
+              label="Balance"
+              value={formatAmount(totals.balance)}
+              testID="dashboard-balance"
+            />
+            <Metric
+              label="Income"
+              value={formatAmount(totals.income)}
+              testID="dashboard-income"
+            />
+          </View>
+          <View style={styles.summaryRow}>
+            <Metric
+              label="Expenses"
+              value={formatAmount(totals.expenses)}
+              testID="dashboard-expenses"
+            />
+            <Metric
+              label="Tracked Time"
+              value={formatDuration(totals.totalMinutes)}
+              testID="dashboard-time"
+            />
+          </View>
         </View>
 
         <View style={styles.grid}>
@@ -187,6 +190,12 @@ function formatDuration(minutes: number): string {
   return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 }
 
+/**
+ * One metric tile. Every tile renders through the same `metricLabel` and
+ * `metricValue` styles — there is deliberately no per-tile font branch, so no
+ * figure can ever come out larger or heavier than its siblings (UI review:
+ * equal-ranked tiles share one value style).
+ */
 function Metric({
   label,
   value,
@@ -353,28 +362,26 @@ const styles = StyleSheet.create({
   summary: {
     marginTop: space.s4,
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: space.s3,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    borderRadius: radius.card,
+    padding: space.s4,
+    gap: space.s4,
     ...shadows.soft,
   },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.s4,
+  },
   metric: {
-    width: '50%',
-    marginBottom: space.s2,
-    paddingRight: space.s2,
+    flex: 1,
   },
   metricLabel: {
-    ...type.text10,
-    color: colors.mutedAlt,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    ...type.text9,
+    color: colors.muted,
     marginBottom: 2,
   },
   metricValue: {
-    fontFamily: fontFamily.bodyMedium,
-    fontSize: 18,
-    lineHeight: 22,
+    ...type.text16,
     color: colors.fg,
   },
   grid: {

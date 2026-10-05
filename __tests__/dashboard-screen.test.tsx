@@ -1,8 +1,9 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 
 import { AppShell } from '../App';
-import { colors } from '../src/theme';
+import { colors, fontFamily, radius, type } from '../src/theme';
 
 jest.mock('react-native-safe-area-context', () => {
   const mock = require('react-native-safe-area-context/jest/mock');
@@ -27,6 +28,40 @@ describe('Dashboard screen', () => {
     expect(view.getByTestId('dashboard-income')).toHaveTextContent('4,170.00€');
     expect(view.getByTestId('dashboard-expenses')).toHaveTextContent('308.90€');
     expect(view.getByTestId('dashboard-time')).toHaveTextContent('6h 15m');
+  });
+
+  it('renders all four metric values with one identical value style', async () => {
+    const view = await render(<AppShell />);
+
+    const valueIds = [
+      'dashboard-balance',
+      'dashboard-income',
+      'dashboard-expenses',
+      'dashboard-time',
+    ];
+    const valueStyles = valueIds.map((id) =>
+      StyleSheet.flatten(view.getByTestId(id).props.style),
+    );
+
+    valueStyles.forEach((style) => {
+      expect(style.fontFamily).toBe(fontFamily.heading);
+      expect(style.fontSize).toBe(type.text16.fontSize);
+      expect(style.lineHeight).toBe(type.text16.lineHeight);
+      expect(style.color).toBe(colors.fg);
+    });
+
+    // No tile carries a style of its own: the four value styles are identical.
+    expect(valueStyles[1]).toEqual(valueStyles[0]);
+    expect(valueStyles[2]).toEqual(valueStyles[0]);
+    expect(valueStyles[3]).toEqual(valueStyles[0]);
+  });
+
+  it('lays the metrics out in one rounded 2x2 card', async () => {
+    const view = await render(<AppShell />);
+
+    expect(view.getByTestId('dashboard-summary')).toHaveStyle({
+      borderRadius: radius.card,
+    });
   });
 
   it('switches to the Money tab from the Money Management entry', async () => {

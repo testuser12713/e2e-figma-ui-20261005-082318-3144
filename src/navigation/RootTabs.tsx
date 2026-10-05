@@ -1,13 +1,32 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { enableScreens } from 'react-native-screens';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { colors, shadows, type } from '../theme';
+import {
+  colors,
+  isWeb,
+  shadows,
+  space,
+  TAB_BAR_HEIGHT,
+  TAB_BAR_SURFACE_HEIGHT,
+  type,
+} from '../theme';
 import DashboardStack from './DashboardStack';
 import MoneyStack from './MoneyStack';
 import TimeStack from './TimeStack';
 import { RootTabParamList } from './types';
+
+// react-native-screens ships disabled on the web build, so the bottom-tab
+// navigator falls back to a scene container that never hides a blurred scene:
+// every tab stayed stacked and the visible screen never swapped (AC-02). On web
+// the library then has to be switched on explicitly, which makes its `Screen`
+// toggle `display: none` on the inactive scene so exactly the focused tab is
+// rendered. On native screens are already enabled and the call is a no-op.
+if (isWeb) {
+  enableScreens(true);
+}
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -56,6 +75,10 @@ export function RootTabs() {
         tabBarStyle: styles.bar,
         tabBarLabelStyle: styles.label,
         tabBarItemStyle: styles.item,
+        // The white surface is only the bottom 77px of the 118px bar group
+        // (DESIGN.md); the top 41px is the notch the floating add button sits
+        // over, so it stays transparent instead of extending the white bar.
+        tabBarBackground: () => <View style={styles.barSurface} />,
       }}
     >
       <Tab.Screen
@@ -91,20 +114,36 @@ export function RootTabs() {
 
 const styles = StyleSheet.create({
   bar: {
+    // The bar group is 118px tall; its white surface (drawn behind the items)
+    // is the bottom 77px, so the 41px notch above stays transparent.
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+    height: TAB_BAR_HEIGHT,
+    paddingTop: TAB_BAR_HEIGHT - TAB_BAR_SURFACE_HEIGHT,
+  },
+  barSurface: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: TAB_BAR_SURFACE_HEIGHT,
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderTopWidth: 0,
-    paddingTop: 6,
-    height: 77,
     ...shadows.nav,
   },
   label: {
     ...type.text7,
-    marginTop: 2,
+    // DESIGN.md types the label at 7px/5px, but a line box shorter than the
+    // font clips the glyph's bottom edge (AC-10). Give the line the font's
+    // height so every label reads fully; the layout itself is unchanged.
+    lineHeight: 10,
+    marginTop: 4,
   },
   item: {
     minHeight: 48,
+    paddingTop: space.s1,
   },
 });
 

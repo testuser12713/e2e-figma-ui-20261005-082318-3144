@@ -230,8 +230,16 @@ export const shadows = {
   } as ViewStyle,
 } as const;
 
-/** Bottom tab bar height (413×118 group, FAB overlaps it). */
+/**
+ * Bottom tab bar geometry (DESIGN.md "Bottom Tab Bar"):
+ * - TAB_BAR_HEIGHT: the pinned 413×118 group at the bottom of every tab screen
+ *   (y 778–896). It is the height a list content inset must reserve.
+ * - TAB_BAR_SURFACE_HEIGHT: the white 413×77 surface inside that group
+ *   (y 819–896) that carries the icons and labels; the remaining 41px above it
+ *   is the notch the floating add button overlaps.
+ */
 export const TAB_BAR_HEIGHT = 118;
+export const TAB_BAR_SURFACE_HEIGHT = 77;
 
 /** react-native-web renders text differently; keep a single place to branch. */
 export const isWeb = Platform.OS === 'web';

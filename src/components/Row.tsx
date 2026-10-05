@@ -4,6 +4,7 @@ import {
   StyleProp,
   StyleSheet,
   Text,
+  TextStyle,
   View,
   ViewStyle,
 } from 'react-native';
@@ -21,6 +22,8 @@ export interface RowProps {
   onPress?: () => void;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  metaStyle?: StyleProp<TextStyle>;
+  subtitleStyle?: StyleProp<TextStyle>;
   testID?: string;
 }
 
@@ -38,17 +41,23 @@ export function Row({
   onPress,
   disabled,
   style,
+  metaStyle,
+  subtitleStyle,
   testID,
 }: RowProps) {
   const isInteractive = Boolean(onPress) && !disabled;
   const content = (
     <View style={styles.content}>
       <View style={styles.textBlock}>
-        {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+        {meta ? (
+          <Text style={[styles.meta, metaStyle]}>{meta}</Text>
+        ) : null}
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        {subtitle ? (
+          <Text style={[styles.subtitle, subtitleStyle]}>{subtitle}</Text>
+        ) : null}
       </View>
       {typeof amount === 'number' ? (
         <AmountText amount={amount} kind={kind} />

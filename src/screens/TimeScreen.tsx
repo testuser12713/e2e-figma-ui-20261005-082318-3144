@@ -157,8 +157,10 @@ export function TimeScreen({ navigation }: TimeScreenProps) {
         testID={`time-row-${item.id}`}
         style={styles.row}
         meta={formatDate(item.date)}
+        metaStyle={styles.rowMeta}
         title={item.title}
         subtitle={`${item.category} · ${formatDuration(item.durationMinutes)}`}
+        subtitleStyle={styles.rowSubtitle}
         onPress={openCalendar}
       />
       <Pressable
@@ -412,6 +414,22 @@ const styles = StyleSheet.create({
   },
   row: {
     flex: 1,
+  },
+  /**
+   * The frame's date line: Inter 400 12px/22px #1C1C1C at 40% opacity, and the
+   * category/duration line below the title in the same muted body style. The
+   * shared Row's default meta/subtitle styles stay untouched for Money/Dashboard.
+   */
+  rowMeta: {
+    ...type.text12Alt,
+    lineHeight: 22,
+    color: colors.fgBody,
+    opacity: 0.4,
+  },
+  rowSubtitle: {
+    ...type.text12Alt,
+    color: colors.fgBody,
+    opacity: 0.4,
   },
   modify: {
     flexDirection: 'row',

@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { render, fireEvent } from '@testing-library/react-native';
 
@@ -93,5 +94,50 @@ describe('Time Management list screen', () => {
     await fireEvent.press(view.getByTestId('time-add-button'));
 
     expect(view.getByTestId('screen-add-appointment')).toBeTruthy();
+  });
+
+  it('keeps the add CTA clear of the floating add button zone', async () => {
+    const view = await renderTime();
+
+    const flatten = (style: unknown) =>
+      StyleSheet.flatten(style as never) as {
+        paddingBottom?: number;
+        gap?: number;
+        minHeight?: number;
+      };
+
+    const listInset =
+      flatten(view.getByTestId('time-list').props.contentContainerStyle)
+        .paddingBottom ?? 0;
+    const footer = flatten(view.getByTestId('time-list-footer').props.style);
+    const cta = flatten(view.getByTestId('time-add-button').props.style);
+    const overview = flatten(
+      view.getByTestId('time-overview-button').props.style,
+    );
+
+    // DESIGN.md layout: the list reserves a 118px bottom inset.
+    expect(listInset).toBe(118);
+
+    // DESIGN.md geometry of the 414×896 frame: the FAB is 64×63 with its
+    // circle bottom at y=841, so its top edge sits at y=778; the tab-bar
+    // surface starts at y=819.
+    const SCREEN_HEIGHT = 896;
+    const FAB_TOP = 841 - 63;
+
+    // At the end of the scroll the content bottom sits `listInset` above the
+    // frame bottom; the Overview button and the footer gap sit below the add
+    // CTA, pushing the CTA's bottom edge that much higher.
+    const belowCta =
+      listInset +
+      (footer.paddingBottom ?? 0) +
+      (overview.minHeight ?? 0) +
+      (footer.gap ?? 0);
+    const ctaBottom = SCREEN_HEIGHT - belowCta;
+    const ctaTop = ctaBottom - (cta.minHeight ?? 0);
+
+    // The CTA's bottom edge stays above the FAB's top edge and its top edge
+    // stays at or above y 750, so the FAB never covers its label.
+    expect(ctaBottom).toBeLessThan(FAB_TOP);
+    expect(ctaTop).toBeLessThanOrEqual(750);
   });
 });

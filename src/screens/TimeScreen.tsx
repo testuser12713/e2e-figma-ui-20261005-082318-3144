@@ -18,12 +18,43 @@ import Row from '../components/Row';
 import { TimeEntry } from '../data/types';
 import { TimeStackParamList } from '../navigation/types';
 import { useAppData } from '../state/AppData';
-import { colors, radius, screenInset, shadows, space, type } from '../theme';
+import {
+  colors,
+  radius,
+  screenInset,
+  shadows,
+  space,
+  TAB_BAR_HEIGHT,
+  type,
+} from '../theme';
 
 export type TimeScreenProps = NativeStackScreenProps<
   TimeStackParamList,
   'TimeList'
 >;
+
+/**
+ * DESIGN.md Floating Add Button: 64×63, pinned `space.s3` above the bottom of
+ * the screen, so it claims the bottom FAB_CLEARANCE px of the list.
+ */
+const FAB_HEIGHT = 63;
+const FAB_BOTTOM_OFFSET = space.s3;
+export const FAB_CLEARANCE = FAB_HEIGHT + FAB_BOTTOM_OFFSET;
+
+/**
+ * DESIGN.md layout: the pinned bottom group (77px tab-bar surface plus the
+ * FAB's overhang above it) is 118px tall, so every scrollable list uses that
+ * as its bottom content inset and nothing ends up under the FAB or tab bar.
+ */
+export const LIST_BOTTOM_INSET = TAB_BAR_HEIGHT;
+
+/**
+ * Room the footer still has to reserve below the CTA so its bottom edge clears
+ * the FAB's top edge. The list's own inset already covers the FAB zone
+ * (LIST_BOTTOM_INSET > FAB_CLEARANCE), so this is 0 today and only kicks in if
+ * the list inset is ever reduced below the FAB.
+ */
+const FOOTER_FAB_CLEARANCE = Math.max(0, FAB_CLEARANCE - LIST_BOTTOM_INSET);
 
 type TimeTab = 'upcoming' | 'past';
 
@@ -186,7 +217,7 @@ export function TimeScreen({ navigation }: TimeScreenProps) {
   );
 
   const footer = (
-    <View style={styles.footer}>
+    <View testID="time-list-footer" style={styles.footer}>
       <PrimaryButton
         testID="time-add-button"
         label="Add a new appointment"
@@ -406,7 +437,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: screenInset,
-    paddingBottom: 120,
+    // DESIGN.md's 118px bottom inset: no row and no button scrolls under the
+    // FAB or the tab bar.
+    paddingBottom: LIST_BOTTOM_INSET,
   },
   rowWrap: {
     flexDirection: 'row',
@@ -462,6 +495,9 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: space.s6,
     gap: space.s5,
+    // Keep the CTA block clear of the FAB zone. The 118px list inset already
+    // clears the 79px FAB; this reserves the remainder when it does not.
+    paddingBottom: FOOTER_FAB_CLEARANCE,
   },
   overviewButton: {
     backgroundColor: colors.accentTranslucent,

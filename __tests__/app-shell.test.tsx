@@ -1,10 +1,12 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { render, fireEvent } from '@testing-library/react-native';
 
 import { AppShell } from '../App';
 import { AppDataProvider } from '../src/state/AppData';
+import Row from '../src/components/Row';
 import DashboardScreen from '../src/screens/DashboardScreen';
 import DashboardMenuScreen from '../src/screens/DashboardMenuScreen';
 import DashboardStatsScreen from '../src/screens/DashboardStatsScreen';
@@ -99,5 +101,36 @@ describe.each(REGISTERED_SCREENS)('registered screen %s', (_name, Screen) => {
     );
 
     expect(view.toJSON()).toBeTruthy();
+  });
+});
+
+describe('Row meta slot', () => {
+  it('keeps the default meta typography when the caller gives no override', async () => {
+    const view = await render(<Row title="Dentist - Clara Odding" meta="09/04/2020" />);
+
+    const meta = StyleSheet.flatten(view.getByText('09/04/2020').props.style);
+    expect(meta.fontSize).toBe(9);
+    expect(meta.letterSpacing).toBe(1.8);
+  });
+
+  it('lets the caller override the meta and subtitle typography', async () => {
+    const view = await render(
+      <Row
+        title="Dentist - Clara Odding"
+        meta="09/04/2020"
+        metaStyle={{ fontSize: 12, lineHeight: 22, opacity: 0.4 }}
+        subtitle="Health · 1h"
+        subtitleStyle={{ fontSize: 12, opacity: 0.4 }}
+      />,
+    );
+
+    const meta = StyleSheet.flatten(view.getByText('09/04/2020').props.style);
+    expect(meta.fontSize).toBe(12);
+    expect(meta.lineHeight).toBe(22);
+    expect(meta.opacity).toBe(0.4);
+
+    const subtitle = StyleSheet.flatten(view.getByText('Health · 1h').props.style);
+    expect(subtitle.fontSize).toBe(12);
+    expect(subtitle.opacity).toBe(0.4);
   });
 });

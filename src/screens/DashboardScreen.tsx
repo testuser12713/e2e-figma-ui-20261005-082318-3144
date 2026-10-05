@@ -38,7 +38,10 @@ export type DashboardScreenProps = NativeStackScreenProps<
  *
  * Time Management and Money Management switch to their tab through the parent
  * tab navigator; Food Management and App Management have no function this sprint
- * and are rendered visibly disabled (AC-03, AC-08).
+ * and are rendered visibly disabled. The search field too is out of scope this
+ * sprint, so it is greyed to the theme's disabled surface and carries a
+ * 'coming soon' hint — never a working-looking control that does nothing
+ * (AC-03, AC-08).
  */
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { totals } = useAppData();
@@ -97,12 +100,17 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
         <View
           testID="dashboard-search"
           accessibilityState={{ disabled: true }}
-          accessibilityLabel="Search"
+          accessibilityLabel="Search — coming soon"
           style={styles.search}
         >
           <Text style={styles.searchText}>Search</Text>
-          <View style={styles.searchIcon}>
-            <SearchIcon />
+          <View style={styles.searchTrailing}>
+            <Text testID="dashboard-search-hint" style={styles.searchHint}>
+              Coming soon
+            </Text>
+            <View style={styles.searchIcon}>
+              <SearchIcon />
+            </View>
           </View>
         </View>
 
@@ -265,7 +273,7 @@ function SearchIcon() {
         cy={7}
         r={5}
         fill="none"
-        stroke={colors.fgBody}
+        stroke={colors.muted}
         strokeWidth={1.6}
       />
       <Line
@@ -273,7 +281,7 @@ function SearchIcon() {
         y1={10.7}
         x2={15}
         y2={15}
-        stroke={colors.fgBody}
+        stroke={colors.muted}
         strokeWidth={1.6}
         strokeLinecap="round"
       />
@@ -317,7 +325,7 @@ const styles = StyleSheet.create({
   },
   search: {
     minHeight: 43,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.track,
     borderRadius: radius.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -328,10 +336,20 @@ const styles = StyleSheet.create({
   },
   searchText: {
     ...type.text16Alt,
-    color: colors.fgBody,
-    opacity: 0.2,
+    color: colors.muted,
   },
-  searchIcon: { opacity: 0.2 },
+  searchTrailing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.s1,
+  },
+  searchHint: {
+    ...type.text12Alt,
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  searchIcon: { opacity: 0.6 },
   summary: {
     marginTop: space.s4,
     backgroundColor: colors.surface,

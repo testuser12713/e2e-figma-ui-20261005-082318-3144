@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 
 import { AppShell } from '../App';
+import { colors } from '../src/theme';
 
 jest.mock('react-native-safe-area-context', () => {
   const mock = require('react-native-safe-area-context/jest/mock');
@@ -52,7 +53,7 @@ describe('Dashboard screen', () => {
     expect(view.getByTestId('screen-dashboard-menu')).toBeTruthy();
   });
 
-  it('renders the Food and App Management entries visibly disabled', async () => {
+  it('renders the Food and App Management entries and the search field visibly disabled', async () => {
     const view = await render(<AppShell />);
 
     const food = view.getByTestId('dashboard-card-food');
@@ -62,6 +63,14 @@ describe('Dashboard screen', () => {
     expect(food).toBeDisabled();
     expect(app).toBeDisabled();
     expect(search).toBeDisabled();
+
+    // The search field is out of scope this sprint, so it must not look like a
+    // working control: greyed to the theme's track surface, its label in a muted
+    // theme text colour, and a visible 'coming soon' hint (AC-08).
+    expect(view.getByTestId('dashboard-search-hint')).toHaveTextContent(
+      'Coming soon',
+    );
+    expect(search).toHaveStyle({ backgroundColor: colors.track });
 
     await fireEvent.press(food);
     await fireEvent.press(app);

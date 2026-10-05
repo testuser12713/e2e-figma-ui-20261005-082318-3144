@@ -5,7 +5,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import MoneyScreen from '../src/screens/MoneyScreen';
 import { AppDataProvider } from '../src/state/AppData';
 import { transactions } from '../src/data/transactions';
-import { colors, formatAmount } from '../src/theme';
+import { colors, formatAmount, TAB_BAR_HEIGHT } from '../src/theme';
 
 jest.mock('react-native-safe-area-context', () => {
   const mock = require('react-native-safe-area-context/jest/mock');
@@ -96,6 +96,52 @@ describe('MoneyScreen', () => {
 
     await fireEvent.press(view.getByTestId('money-add-button'));
     expect(navigate).toHaveBeenCalledWith('AddExpense');
+  });
+
+  it('ends the list above the floating add button so no row is covered', async () => {
+    const { view } = await renderMoneyScreen();
+
+    const flatten = (style: unknown) =>
+      StyleSheet.flatten(style as never) as {
+        bottom?: number;
+        height?: number;
+        marginBottom?: number;
+        paddingBottom?: number;
+      };
+
+    // Read the FAB's rendered geometry instead of trusting the frame's numbers.
+    const fabWrap = flatten(view.getByTestId('money-fab-wrap').props.style);
+    const fabChildren = view.getByTestId('money-add-button').props.children;
+    const fabCircleStyle = (
+      Array.isArray(fabChildren) ? fabChildren : [fabChildren]
+    )
+      .map((child: { props?: { style?: unknown } } | null) =>
+        child?.props ? child.props.style : undefined,
+      )
+      .find((style: unknown) => typeof flatten(style).height === 'number');
+    const fabSize = flatten(fabCircleStyle);
+
+    const fabBottomOffset = fabWrap.bottom ?? 0;
+    const fabHeight = fabSize.height ?? 0;
+    // The FAB claims the bottom `offset + height` px of the screen.
+    const fabZone = fabBottomOffset + fabHeight;
+
+    const listStyle = flatten(
+      view.getByTestId('money-list').props.style,
+    );
+    const listBottomClearance = listStyle.marginBottom ?? 0;
+    const contentBottomInset = flatten(
+      view.getByTestId('money-list').props.contentContainerStyle,
+    ).paddingBottom;
+
+    // The rendered FAB has a real height sitting a real offset above the
+    // screen bottom; the list viewport must end at the FAB's top edge so a row
+    // can never be rendered underneath it at any scroll offset.
+    expect(fabHeight).toBeGreaterThan(0);
+    expect(listBottomClearance).toBeGreaterThanOrEqual(fabZone);
+
+    // The list content also keeps DESIGN.md's 118px bottom inset.
+    expect(contentBottomInset).toBe(TAB_BAR_HEIGHT);
   });
 
   it('returns to the Dashboard tab from the header back chevron', async () => {

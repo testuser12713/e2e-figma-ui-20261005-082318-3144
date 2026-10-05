@@ -36,6 +36,17 @@ export type MoneyScreenProps = NativeStackScreenProps<
 const TILE_SIZE = 55;
 const HEADER_HEIGHT = 406;
 
+/**
+ * Where the FAB really sits. `fabWrap` pins it `space.s5` above the bottom of
+ * this screen (the screen ends at the tab-bar top; it does not include the
+ * 118px tab bar) and `FloatingAddButton` is 63px tall, so the FAB's top edge
+ * is FAB_CLEARANCE px above the list's bottom edge. The frame's absolute y=778
+ * does not apply here: the rendered position is what must be cleared.
+ */
+const FAB_HEIGHT = 63;
+const FAB_BOTTOM_OFFSET = space.s5;
+export const FAB_CLEARANCE = FAB_HEIGHT + FAB_BOTTOM_OFFSET;
+
 /* DESIGN.md "Header with back chevron": the glyph is 11×18 in #181461, drawn
  * like the Time screen's control so the same asset reads identical on both. */
 function BackChevron() {
@@ -253,6 +264,7 @@ export function MoneyScreen({ navigation }: MoneyScreenProps) {
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="screen-money-list">
       <FlatList
+        testID="money-list"
         style={styles.list}
         data={transactions}
         keyExtractor={(item) => item.id}
@@ -269,7 +281,11 @@ export function MoneyScreen({ navigation }: MoneyScreenProps) {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
-      <View style={styles.fabWrap} pointerEvents="box-none">
+      <View
+        testID="money-fab-wrap"
+        style={styles.fabWrap}
+        pointerEvents="box-none"
+      >
         <FloatingAddButton
           testID="money-add-button"
           label="Add expense"
@@ -282,9 +298,17 @@ export function MoneyScreen({ navigation }: MoneyScreenProps) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgAlt },
-  list: { flex: 1 },
-  /* DESIGN.md uses a 118px bottom content inset on scrollable lists so the last
-   * row clears the FAB and the tab bar (TAB_BAR_HEIGHT = 118). */
+  list: {
+    flex: 1,
+    /* End the scrollable viewport at the FAB's top edge. Content is clipped
+     * above this line, so no transaction row (and no right-aligned amount) can
+     * ever render underneath the floating add button at any scroll offset.
+     * A bottom content inset alone could not do this: it only adds space after
+     * the last row, leaving the FAB free to cover a row mid-scroll. */
+    marginBottom: FAB_CLEARANCE,
+  },
+  /* DESIGN.md's 118px bottom content inset: when the list is scrolled to its
+   * end the last row sits in view with clear space below it, above the FAB. */
   listContent: { paddingBottom: TAB_BAR_HEIGHT },
   headerCard: {
     height: HEADER_HEIGHT,

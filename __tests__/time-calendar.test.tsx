@@ -86,4 +86,27 @@ describe('TimeCalendarScreen', () => {
 
     expect(view.getByTestId('calendar-day-2020-04-16')).toBeTruthy();
   });
+
+  it('renders the two appointments of the initially selected day as agenda blocks', async () => {
+    const view = await renderScreen();
+
+    expect(view.getByTestId('calendar-agenda-date')).toHaveTextContent(
+      '9 April 2020',
+    );
+    expect(view.getAllByTestId(/^calendar-agenda-block-/)).toHaveLength(2);
+    expect(view.getByTestId('calendar-agenda-block-time-001')).toBeTruthy();
+    expect(view.getByTestId('calendar-agenda-block-time-002')).toBeTruthy();
+    expect(view.getByText('Dentist - Clara Odding')).toBeTruthy();
+    expect(view.getByText('Team Standup')).toBeTruthy();
+    expect(view.queryByTestId('calendar-agenda-empty')).toBeNull();
+  });
+
+  it('shows a plain empty hint on a day without entries', async () => {
+    const view = await renderScreen();
+
+    await fireEvent.press(view.getByTestId(SECOND_DAY));
+
+    expect(view.getByTestId('calendar-agenda-empty')).toBeTruthy();
+    expect(view.queryAllByTestId(/^calendar-agenda-block-/)).toHaveLength(0);
+  });
 });

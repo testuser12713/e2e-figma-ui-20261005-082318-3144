@@ -1,6 +1,10 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { CommonActions } from '@react-navigation/native';
+import {
+  createBottomTabNavigator,
+  type BottomTabNavigationProp,
+} from '@react-navigation/bottom-tabs';
 import { enableScreens } from 'react-native-screens';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -29,6 +33,40 @@ if (isWeb) {
 }
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+
+/**
+ * The list screen each tab restores when it is pressed. A tab is a native
+ * stack (list → detail), and React Navigation keeps that nested state when the
+ * tab loses focus. Without this, returning to a tab — or pressing the already
+ * focused tab again — leaves the last pushed detail (e.g. MoneyReport) on top,
+ * so the tab's list never comes to the front and the tab bar alone cannot get
+ * back to it (AC-02).
+ */
+const TAB_ROOT_ROUTE: Record<keyof RootTabParamList, string> = {
+  Dashboard: 'DashboardHome',
+  Money: 'MoneyList',
+  Time: 'TimeList',
+};
+
+/**
+ * Bring a tab's ROOT (list) screen to the front: focus the tab and navigate
+ * its nested stack back to the list route. `pop: true` carries over the v6
+ * "navigate back if the screen already exists" behaviour, so a pushed detail
+ * is popped instead of being stacked below a second copy of the list. This is
+ * required explicitly because in v7 the JS tab bar only *emits* the
+ * `behavior.popToTop` hint; it does not act on it.
+ */
+function bringTabRootForward(
+  navigation: BottomTabNavigationProp<RootTabParamList>,
+  tab: keyof RootTabParamList,
+) {
+  navigation.dispatch(
+    CommonActions.navigate(tab, {
+      screen: TAB_ROOT_ROUTE[tab],
+      pop: true,
+    }),
+  );
+}
 
 function HomeIcon({ color }: { color: string }) {
   return (
@@ -84,6 +122,12 @@ export function RootTabs() {
       <Tab.Screen
         name="Dashboard"
         component={DashboardStack}
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            event.preventDefault();
+            bringTabRootForward(navigation, 'Dashboard');
+          },
+        })}
         options={{
           tabBarButtonTestID: 'tab-dashboard',
           tabBarAccessibilityLabel: 'Dashboard',
@@ -93,6 +137,12 @@ export function RootTabs() {
       <Tab.Screen
         name="Money"
         component={MoneyStack}
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            event.preventDefault();
+            bringTabRootForward(navigation, 'Money');
+          },
+        })}
         options={{
           tabBarButtonTestID: 'tab-money',
           tabBarAccessibilityLabel: 'Money Management',
@@ -102,6 +152,12 @@ export function RootTabs() {
       <Tab.Screen
         name="Time"
         component={TimeStack}
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            event.preventDefault();
+            bringTabRootForward(navigation, 'Time');
+          },
+        })}
         options={{
           tabBarButtonTestID: 'tab-time',
           tabBarAccessibilityLabel: 'Time Management',

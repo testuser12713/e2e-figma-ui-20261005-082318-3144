@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { MoneyStackParamList } from '../navigation/types';
+import { MoneyStackParamList, RootTabParamList } from '../navigation/types';
 import { useAppData } from '../state/AppData';
 import { Transaction } from '../data/types';
 import Row from '../components/Row';
@@ -34,6 +35,20 @@ export type MoneyScreenProps = NativeStackScreenProps<
 
 const TILE_SIZE = 55;
 const HEADER_HEIGHT = 406;
+
+/* DESIGN.md "Header with back chevron": the glyph is 11×18 in #181461, drawn
+ * like the Time screen's control so the same asset reads identical on both. */
+function BackChevron() {
+  return (
+    <Svg width={11} height={18} viewBox="0 0 10.77 18.2">
+      <Path
+        d="M10.3385 15.8922L3.28952 9.09957L10.3385 2.30693C10.5948 2.0506 10.7443 1.7302 10.7443 1.36707C10.7443 1.00394 10.6162 0.66217 10.3598 0.40585C10.1035 0.14952 9.78312 0 9.41998 0L9.39863 0C9.05686 0 8.71509 0.12816 8.45876 0.38449L0.40585 8.13835C0.14953 8.39468 0 8.73645 0 9.09957C0 9.4627 0.14953 9.82583 0.40585 10.0608L8.48013 17.8147C8.73645 18.0496 9.05686 18.1992 9.41999 18.1992C9.78312 18.1992 10.1249 18.0496 10.3812 17.7933C10.6375 17.537 10.7657 17.1952 10.7657 16.8321C10.7657 16.469 10.6162 16.1272 10.3385 15.8922Z"
+        fill={colors.iconInk}
+        fillRule="evenodd"
+      />
+    </Svg>
+  );
+}
 
 /* Category-tile icons. The frame's own assets are empty, so DESIGN.md asks for
  * a matching outline drawn in #000000 — kept as plain react-native-svg shapes
@@ -134,9 +149,11 @@ const CATEGORY_TILES: Array<{ key: string; Icon: () => React.JSX.Element }> = [
 function MoneyHeader({
   expenses,
   onOpenReport,
+  onBack,
 }: {
   expenses: number;
   onOpenReport: () => void;
+  onBack: () => void;
 }) {
   return (
     <View>
@@ -152,22 +169,20 @@ function MoneyHeader({
           style={styles.headerIllustration}
           resizeMode="cover"
         />
-        <View
+        <Pressable
           testID="money-back-button"
           accessibilityRole="button"
-          accessibilityState={{ disabled: true }}
-          pointerEvents="none"
-          style={[styles.backButton, styles.disabled]}
+          accessibilityLabel="Back to Dashboard"
+          onPress={(event) => {
+            /* The chevron sits inside the header card, which opens the report;
+             * keep its own press from also triggering the card's. */
+            event.stopPropagation();
+            onBack();
+          }}
+          style={styles.backButton}
         >
-          <Svg width={11} height={18} viewBox="0 0 12 18">
-            <Path
-              d="M10 1 3 9l7 8"
-              stroke={colors.iconInk}
-              strokeWidth={2}
-              fill="none"
-            />
-          </Svg>
-        </View>
+          <BackChevron />
+        </Pressable>
         <View style={styles.avatar} testID="money-avatar">
           <Text style={styles.avatarLetter}>R</Text>
         </View>
@@ -227,14 +242,26 @@ function TransactionRow({
 export function MoneyScreen({ navigation }: MoneyScreenProps) {
   const { transactions, totals } = useAppData();
   const openReport = () => navigation.navigate('MoneyReport');
+  /* The chevron is a live control: it leaves the Money stack through the parent
+   * tab navigator and lands on the Dashboard tab (DESIGN.md "Header with back
+   * chevron" — the frame shows it as an active control, not a disabled one). */
+  const goToDashboard = () =>
+    navigation
+      .getParent<BottomTabNavigationProp<RootTabParamList>>()
+      ?.navigate('Dashboard');
 
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="screen-money-list">
       <FlatList
+        style={styles.list}
         data={transactions}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
-          <MoneyHeader expenses={totals.expenses} onOpenReport={openReport} />
+          <MoneyHeader
+            expenses={totals.expenses}
+            onOpenReport={openReport}
+            onBack={goToDashboard}
+          />
         }
         renderItem={({ item }) => (
           <TransactionRow item={item} onPress={openReport} />
@@ -255,6 +282,9 @@ export function MoneyScreen({ navigation }: MoneyScreenProps) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgAlt },
+  list: { flex: 1 },
+  /* DESIGN.md uses a 118px bottom content inset on scrollable lists so the last
+   * row clears the FAB and the tab bar (TAB_BAR_HEIGHT = 118). */
   listContent: { paddingBottom: TAB_BAR_HEIGHT },
   headerCard: {
     height: HEADER_HEIGHT,
@@ -350,9 +380,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: space.s5,
     alignItems: 'center',
-  },
-  disabled: {
-    opacity: 0.4,
   },
 });
 

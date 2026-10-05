@@ -14,7 +14,11 @@ jest.mock('react-native-safe-area-context', () => {
 
 async function renderMoneyScreen() {
   const navigate = jest.fn();
-  const navigation = { navigate } as never;
+  const parentNavigate = jest.fn();
+  const navigation = {
+    navigate,
+    getParent: () => ({ navigate: parentNavigate }),
+  } as never;
   const route = { key: 'money-list', name: 'MoneyList' } as never;
 
   const view = await render(
@@ -23,7 +27,7 @@ async function renderMoneyScreen() {
     </AppDataProvider>,
   );
 
-  return { view, navigate };
+  return { view, navigate, parentNavigate };
 }
 
 describe('MoneyScreen', () => {
@@ -92,5 +96,17 @@ describe('MoneyScreen', () => {
 
     await fireEvent.press(view.getByTestId('money-add-button'));
     expect(navigate).toHaveBeenCalledWith('AddExpense');
+  });
+
+  it('returns to the Dashboard tab from the header back chevron', async () => {
+    const { view, parentNavigate } = await renderMoneyScreen();
+
+    const chevron = view.getByTestId('money-back-button');
+    // The frame shows it as a live control, so it must not carry the disabled look.
+    expect(chevron.props.accessibilityState?.disabled).not.toBe(true);
+    expect(chevron.props.pointerEvents).not.toBe('none');
+
+    await fireEvent.press(chevron);
+    expect(parentNavigate).toHaveBeenCalledWith('Dashboard');
   });
 });

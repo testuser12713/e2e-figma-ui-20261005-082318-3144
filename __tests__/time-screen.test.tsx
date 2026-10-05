@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { render, fireEvent } from '@testing-library/react-native';
 
@@ -93,5 +94,48 @@ describe('Time Management list screen', () => {
     await fireEvent.press(view.getByTestId('time-add-button'));
 
     expect(view.getByTestId('screen-add-appointment')).toBeTruthy();
+  });
+
+  it('ends the list above the floating add button so the CTA is never covered', async () => {
+    const view = await renderTime();
+
+    const flatten = (style: unknown) =>
+      StyleSheet.flatten(style as never) as {
+        bottom?: number;
+        height?: number;
+        marginBottom?: number;
+        paddingBottom?: number;
+      };
+
+    // Read the FAB's rendered geometry instead of the design frame's numbers.
+    const fabWrap = flatten(view.getByTestId('time-fab-wrap').props.style);
+    const fabChildren = view.getByTestId('time-add-fab').props.children;
+    const fabCircleStyle = (
+      Array.isArray(fabChildren) ? fabChildren : [fabChildren]
+    )
+      .map((child: { props?: { style?: unknown } } | null) =>
+        child?.props ? child.props.style : undefined,
+      )
+      .find((style: unknown) => typeof flatten(style).height === 'number');
+    const fabSize = flatten(fabCircleStyle);
+
+    const fabBottomOffset = fabWrap.bottom ?? 0;
+    const fabHeight = fabSize.height ?? 0;
+    // The FAB claims the bottom `offset + height` px of the screen.
+    const fabZone = fabBottomOffset + fabHeight;
+
+    const list = flatten(view.getByTestId('time-list').props.style);
+    const listBottomInset = list.marginBottom ?? 0;
+    const contentBottomInset =
+      flatten(view.getByTestId('time-list').props.contentContainerStyle)
+        .paddingBottom ?? 0;
+
+    // The rendered FAB has a real height sitting a real offset above the
+    // screen bottom; that whole zone must be cleared.
+    expect(fabHeight).toBeGreaterThan(0);
+    expect(listBottomInset).toBeGreaterThanOrEqual(fabZone);
+
+    // The list content also keeps DESIGN.md's 118px bottom inset.
+    expect(contentBottomInset).toBe(118);
   });
 });

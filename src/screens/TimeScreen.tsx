@@ -18,12 +18,38 @@ import Row from '../components/Row';
 import { TimeEntry } from '../data/types';
 import { TimeStackParamList } from '../navigation/types';
 import { useAppData } from '../state/AppData';
-import { colors, radius, screenInset, shadows, space, type } from '../theme';
+import {
+  colors,
+  radius,
+  screenInset,
+  shadows,
+  space,
+  TAB_BAR_HEIGHT,
+  type,
+} from '../theme';
 
 export type TimeScreenProps = NativeStackScreenProps<
   TimeStackParamList,
   'TimeList'
 >;
+
+/**
+ * Where the FAB really sits. `fabWrap` pins it `space.s3` above the bottom of
+ * this screen (the screen ends at the tab-bar top, it does not include the
+ * 77px tab bar) and `FloatingAddButton` is 63px tall, so the FAB's top edge is
+ * FAB_CLEARANCE px above the list's bottom edge. The frame's absolute y=778
+ * does not apply: the rendered position is what must be cleared.
+ */
+const FAB_HEIGHT = 63;
+const FAB_BOTTOM_OFFSET = space.s3;
+export const FAB_CLEARANCE = FAB_HEIGHT + FAB_BOTTOM_OFFSET;
+
+/**
+ * DESIGN.md layout: the pinned bottom group (77px tab-bar surface plus the
+ * FAB's overhang above it) is 118px tall, so every scrollable list uses that
+ * as its bottom content inset and nothing ends up under the FAB or tab bar.
+ */
+export const LIST_BOTTOM_INSET = TAB_BAR_HEIGHT;
 
 type TimeTab = 'upcoming' | 'past';
 
@@ -186,7 +212,7 @@ export function TimeScreen({ navigation }: TimeScreenProps) {
   );
 
   const footer = (
-    <View style={styles.footer}>
+    <View testID="time-list-footer" style={styles.footer}>
       <PrimaryButton
         testID="time-add-button"
         label="Add a new appointment"
@@ -302,7 +328,11 @@ export function TimeScreen({ navigation }: TimeScreenProps) {
         contentContainerStyle={styles.listContent}
       />
 
-      <View style={styles.fabWrap} pointerEvents="box-none">
+      <View
+        testID="time-fab-wrap"
+        style={styles.fabWrap}
+        pointerEvents="box-none"
+      >
         <FloatingAddButton
           testID="time-add-fab"
           label="Add an appointment"
@@ -403,10 +433,17 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+    // End the scrollable viewport at the FAB's top edge. Content is clipped
+    // above this line, so neither a row nor the CTA can ever be rendered
+    // underneath the FAB at any scroll offset — only the footer scrolls into
+    // view from below it.
+    marginBottom: FAB_CLEARANCE,
   },
   listContent: {
     paddingHorizontal: screenInset,
-    paddingBottom: 120,
+    // DESIGN.md's 118px bottom inset: no row and no button scrolls under the
+    // FAB or the tab bar.
+    paddingBottom: LIST_BOTTOM_INSET,
   },
   rowWrap: {
     flexDirection: 'row',

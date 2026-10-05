@@ -51,6 +51,15 @@ export const FAB_CLEARANCE = FAB_HEIGHT + FAB_BOTTOM_OFFSET;
  */
 export const LIST_BOTTOM_INSET = TAB_BAR_HEIGHT;
 
+/**
+ * The frame's header row is 27px tall, but every control needs a 44px touch
+ * area (DESIGN.md). The controls are laid out at the row's own 27px height and
+ * the missing 17px is added with hitSlop, so the row never grows taller than
+ * the frame and no button is pulled above the screen with a negative offset.
+ */
+const HEADER_ROW_HEIGHT = 27;
+const HEADER_HIT_SLOP = { top: 9, bottom: 9, left: 0, right: 0 } as const;
+
 type TimeTab = 'upcoming' | 'past';
 
 const USER_ICON = require('../../design/figma/assets/noun-user-1335326.png');
@@ -230,12 +239,13 @@ export function TimeScreen({ navigation }: TimeScreenProps) {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="screen-time-list">
-      <View style={styles.headerBlock}>
-        <View style={styles.headerBar}>
+      <View style={styles.headerBlock} testID="time-header-block">
+        <View style={styles.headerBar} testID="time-header-bar">
           <Pressable
             testID="time-open-calendar"
             accessibilityRole="button"
             accessibilityLabel="Open calendar"
+            hitSlop={HEADER_HIT_SLOP}
             onPress={openCalendar}
             style={styles.backButton}
           >
@@ -246,10 +256,16 @@ export function TimeScreen({ navigation }: TimeScreenProps) {
             accessibilityRole="button"
             accessibilityLabel="Profile"
             accessibilityState={{ disabled: true }}
+            hitSlop={HEADER_HIT_SLOP}
             disabled
             style={styles.avatarButton}
           >
-            <Image source={USER_ICON} style={styles.avatar} accessible={false} />
+            <Image
+              testID="time-profile-avatar"
+              source={USER_ICON}
+              style={styles.avatar}
+              accessible={false}
+            />
           </Pressable>
         </View>
 
@@ -347,28 +363,31 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   headerBlock: {
     paddingHorizontal: screenInset,
+    // The frame's header group sits 25px below the screen top; the closest
+    // spacing token keeps the profile control fully inside the viewport at
+    // 414×896 instead of flush against the top edge.
+    paddingTop: space.s5,
   },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 27,
+    // Exactly the frame's 27px row. The controls are laid out at this height
+    // (their touch area is completed with hitSlop) so nothing overflows the
+    // row and no negative margin can pull the profile control past the edge.
+    height: HEADER_ROW_HEIGHT,
   },
   backButton: {
     width: 44,
-    height: 44,
+    height: HEADER_ROW_HEIGHT,
     justifyContent: 'center',
     alignItems: 'flex-start',
-    marginTop: -8,
-    marginBottom: -8,
   },
   avatarButton: {
     width: 44,
-    height: 44,
+    height: HEADER_ROW_HEIGHT,
     alignItems: 'flex-end',
     justifyContent: 'center',
-    marginTop: -8,
-    marginBottom: -8,
     opacity: 0.4,
   },
   avatar: {

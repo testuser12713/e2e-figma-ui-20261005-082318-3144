@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import {
   StyleProp,
   StyleSheet,
@@ -18,6 +18,8 @@ export interface FormFieldProps {
   multiline?: boolean;
   invalid?: boolean;
   errorText?: string;
+  /** Optional leading icon, as the add-sheet frames draw one in every field. */
+  icon?: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -35,6 +37,7 @@ export function FormField({
   multiline,
   invalid,
   errorText,
+  icon,
   style,
   testID,
 }: FormFieldProps) {
@@ -47,6 +50,7 @@ export function FormField({
           invalid ? styles.invalid : null,
         ]}
       >
+        {icon ? <View style={styles.leadingIcon}>{icon}</View> : null}
         <TextInput
           testID={testID}
           accessibilityLabel={label}
@@ -75,9 +79,16 @@ const styles = StyleSheet.create({
     minHeight: 43,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: space.s2,
     ...shadows.soft,
+  },
+  leadingIcon: {
+    marginRight: space.s1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   multiline: {
     minHeight: 90,
@@ -88,6 +99,7 @@ const styles = StyleSheet.create({
     borderColor: colors.warmLine,
   },
   input: {
+    flex: 1,
     ...type.text16Alt,
     color: colors.fgBody,
     paddingVertical: space.s1,

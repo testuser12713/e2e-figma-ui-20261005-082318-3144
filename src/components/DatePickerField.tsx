@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { ReactNode, useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -16,6 +16,8 @@ export interface DatePickerFieldProps {
   value: Date | null;
   onChange: (date: Date) => void;
   placeholder?: string;
+  /** Optional leading icon, as the add-sheet frames draw one in every field. */
+  icon?: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -61,6 +63,7 @@ export function DatePickerField({
   value,
   onChange,
   placeholder = 'Select Date',
+  icon,
   style,
   testID,
 }: DatePickerFieldProps) {
@@ -111,6 +114,7 @@ export function DatePickerField({
         onPress={openPicker}
         style={({ pressed }) => [styles.field, pressed ? styles.pressed : null]}
       >
+        {icon ? <View style={styles.leadingIcon}>{icon}</View> : null}
         <Text style={value ? styles.valueText : styles.placeholderText}>
           {value ? toIsoDate(value) : placeholder}
         </Text>
@@ -198,18 +202,27 @@ const styles = StyleSheet.create({
     minHeight: 43,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: space.s2,
     ...shadows.soft,
+  },
+  leadingIcon: {
+    marginRight: space.s1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.8,
   },
   valueText: {
+    flex: 1,
     ...type.text16Alt,
     color: colors.fgBody,
   },
   placeholderText: {
+    flex: 1,
     ...type.text16Alt,
     color: colors.placeholder,
   },

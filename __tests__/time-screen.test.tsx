@@ -96,6 +96,51 @@ describe('Time Management list screen', () => {
     expect(view.getByTestId('screen-add-appointment')).toBeTruthy();
   });
 
+  it('renders the profile control fully inside the header, not clipped at the screen edge', async () => {
+    const view = await renderTime();
+
+    const flatten = (style: unknown) =>
+      StyleSheet.flatten(style as never) as {
+        paddingTop?: number;
+        height?: number;
+        width?: number;
+        marginTop?: number;
+        marginBottom?: number;
+      };
+
+    const headerBlock = flatten(
+      view.getByTestId('time-header-block').props.style,
+    );
+    const headerBar = flatten(view.getByTestId('time-header-bar').props.style);
+    const profile = flatten(view.getByTestId('time-profile').props.style);
+    const avatar = flatten(view.getByTestId('time-profile-avatar').props.style);
+
+    // The frame's header row is 27px tall and the avatar 27×27: the control
+    // must sit inside that row, not be pulled above the screen by a negative
+    // offset or an oversized button box.
+    expect(headerBar.height).toBe(27);
+    expect(avatar.width).toBe(27);
+    expect(avatar.height).toBe(27);
+    expect(profile.height).toBe(27);
+    expect(profile.marginTop ?? 0).toBeGreaterThanOrEqual(0);
+    expect(profile.marginBottom ?? 0).toBeGreaterThanOrEqual(0);
+
+    // The header block starts below the screen top, so the centered avatar's
+    // top edge is that far down and its bottom stays well inside 896.
+    const avatarTop =
+      (headerBlock.paddingTop ?? 0) +
+      ((headerBar.height ?? 0) - (avatar.height ?? 0)) / 2;
+    expect(avatarTop).toBeGreaterThan(0);
+    expect(avatarTop + (avatar.height ?? 0)).toBeLessThan(896);
+
+    // The 44px touch target is completed with hitSlop instead of an oversized
+    // box that would overflow the header and clip the control.
+    const hitSlop = view.getByTestId('time-profile').props.hitSlop;
+    expect(
+      (profile.height ?? 0) + hitSlop.top + hitSlop.bottom,
+    ).toBeGreaterThanOrEqual(44);
+  });
+
   it('ends the list above the floating add button so the CTA is never covered', async () => {
     const view = await renderTime();
 

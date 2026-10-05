@@ -1,8 +1,10 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 
+import { AppShell } from '../App';
 import { AppDataProvider } from '../src/state/AppData';
 import TimeCalendarScreen from '../src/screens/TimeCalendarScreen';
+import { colors } from '../src/theme';
 
 jest.mock('react-native-safe-area-context', () => {
   const mock = require('react-native-safe-area-context/jest/mock');
@@ -108,5 +110,48 @@ describe('TimeCalendarScreen', () => {
 
     expect(view.getByTestId('calendar-agenda-empty')).toBeTruthy();
     expect(view.queryAllByTestId(/^calendar-agenda-block-/)).toHaveLength(0);
+  });
+
+  it('renders the opening day blocks with the frame fill, radius and pitch', async () => {
+    const view = await renderScreen();
+
+    const card = view.getByTestId('calendar-agenda-card-time-001');
+    expect(card).toHaveStyle({
+      minHeight: 118,
+      borderRadius: 3,
+      backgroundColor: colors.accentBlock,
+    });
+
+    // 118px block + 17px gap = the frame's 135px row pitch.
+    expect(view.getByTestId('calendar-agenda-block-time-001')).toHaveStyle({
+      marginBottom: 17,
+    });
+  });
+
+  it('renders no placeholder or developer text anywhere in the calendar', async () => {
+    const view = await renderScreen();
+
+    expect(view.queryByText(/placeholder view/i)).toBeNull();
+    expect(view.queryByText(/follow-up ticket/i)).toBeNull();
+    expect(view.queryByText(/built in a follow-up/i)).toBeNull();
+  });
+});
+
+describe('Time tab → calendar route', () => {
+  // The acceptance statement: opening the calendar from the Time screen shows
+  // the opening day's two appointments as green agenda blocks and no
+  // placeholder/developer text anywhere.
+  it('shows the opening day agenda and no placeholder text', async () => {
+    const view = await render(<AppShell />);
+
+    await fireEvent.press(view.getByTestId('tab-time'));
+    await fireEvent.press(view.getByTestId('time-open-calendar'));
+
+    expect(view.getByTestId('screen-time-calendar')).toBeTruthy();
+    expect(view.getAllByTestId(/^calendar-agenda-block-/)).toHaveLength(2);
+    expect(view.getByText('Dentist - Clara Odding')).toBeTruthy();
+    expect(view.getByText('Team Standup')).toBeTruthy();
+    expect(view.queryByText(/placeholder view/i)).toBeNull();
+    expect(view.queryByText(/follow-up ticket/i)).toBeNull();
   });
 });

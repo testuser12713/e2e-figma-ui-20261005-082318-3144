@@ -18,6 +18,11 @@ export interface DatePickerFieldProps {
   placeholder?: string;
   /** Optional leading icon, as the add-sheet frames draw one in every field. */
   icon?: ReactNode;
+  /**
+   * Optional leading icon rendered at the left inside the field, mirroring
+   * `FormField.leadingIcon` (DESIGN.md, "Form field"). Existing usages omit it.
+   */
+  leadingIcon?: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -64,6 +69,7 @@ export function DatePickerField({
   onChange,
   placeholder = 'Select Date',
   icon,
+  leadingIcon,
   style,
   testID,
 }: DatePickerFieldProps) {
@@ -105,6 +111,8 @@ export function DatePickerField({
     setOpen(false);
   };
 
+  const leading = leadingIcon ?? icon;
+
   return (
     <View style={[styles.wrap, style]}>
       <Pressable
@@ -114,8 +122,20 @@ export function DatePickerField({
         onPress={openPicker}
         style={({ pressed }) => [styles.field, pressed ? styles.pressed : null]}
       >
-        {icon ? <View style={styles.leadingIcon}>{icon}</View> : null}
-        <Text style={value ? styles.valueText : styles.placeholderText}>
+        {leading ? (
+          <View
+            testID={testID ? `${testID}-leading-icon` : undefined}
+            style={styles.leading}
+          >
+            {leading}
+          </View>
+        ) : null}
+        <Text
+          style={[
+            styles.fieldText,
+            value ? styles.valueText : styles.placeholderText,
+          ]}
+        >
           {value ? toIsoDate(value) : placeholder}
         </Text>
       </Pressable>
@@ -204,25 +224,26 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space.s2,
+    paddingHorizontal: space.s3,
     ...shadows.soft,
-  },
-  leadingIcon: {
-    marginRight: space.s1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.8,
   },
-  valueText: {
+  leading: {
+    width: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: space.s0,
+  },
+  fieldText: {
     flex: 1,
+  },
+  valueText: {
     ...type.text16Alt,
     color: colors.fgBody,
   },
   placeholderText: {
-    flex: 1,
     ...type.text16Alt,
     color: colors.placeholder,
   },

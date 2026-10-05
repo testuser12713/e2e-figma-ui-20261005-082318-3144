@@ -20,6 +20,13 @@ export interface FormFieldProps {
   errorText?: string;
   /** Optional leading icon, as the add-sheet frames draw one in every field. */
   icon?: ReactNode;
+  /**
+   * Optional leading icon rendered at the left inside the field (DESIGN.md,
+   * "Form field"). The caller supplies the bundled icon; the field owns the
+   * token-styled slot (16px wide, `space.s3` inset from the edge, `space.s0`
+   * gap before the text). Existing usages omit it and render exactly as before.
+   */
+  leadingIcon?: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -38,9 +45,11 @@ export function FormField({
   invalid,
   errorText,
   icon,
+  leadingIcon,
   style,
   testID,
 }: FormFieldProps) {
+  const leading = leadingIcon ?? icon;
   return (
     <View style={[styles.wrap, style]}>
       <View
@@ -50,7 +59,14 @@ export function FormField({
           invalid ? styles.invalid : null,
         ]}
       >
-        {icon ? <View style={styles.leadingIcon}>{icon}</View> : null}
+        {leading ? (
+          <View
+            testID={testID ? `${testID}-leading-icon` : undefined}
+            style={styles.leading}
+          >
+            {leading}
+          </View>
+        ) : null}
         <TextInput
           testID={testID}
           accessibilityLabel={label}
@@ -81,14 +97,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space.s2,
+    paddingHorizontal: space.s3,
     ...shadows.soft,
   },
-  leadingIcon: {
-    marginRight: space.s1,
+  leading: {
+    width: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: space.s0,
   },
   multiline: {
     minHeight: 90,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +13,7 @@ import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { MoneyStackParamList } from '../navigation/types';
 import { useAppData } from '../state/AppData';
@@ -38,6 +39,58 @@ function BackIcon() {
         fillRule="nonzero"
       />
     </Svg>
+  );
+}
+
+/* Leading icons from DESIGN.md "Form field". The frame's own assets for Name
+ * (`noun_Search_860389`) and Beschreibung / Amount (`noun_Map_2404959`) render
+ * empty, so they are drawn from the frame outlines in #23233C, following the
+ * MoneyScreen category-icon approach. Select Date uses the exported
+ * `icon-15x16.png` as the frame lists it. */
+
+function SearchIcon() {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 16 16">
+      <Circle
+        cx={7}
+        cy={7}
+        r={5}
+        stroke={colors.fg}
+        strokeWidth={1.6}
+        fill="none"
+      />
+      <Path d="M11 11l4 4" stroke={colors.fg} strokeWidth={1.6} fill="none" />
+    </Svg>
+  );
+}
+
+function MapIcon() {
+  return (
+    <Svg width={14} height={18} viewBox="0 0 14 18">
+      <Path
+        d="M7 1a5 5 0 0 1 5 5c0 3.4-3.4 7.2-4.6 8.6a.5.5 0 0 1-.8 0C5.4 13.2 2 9.4 2 6a5 5 0 0 1 5-5Z"
+        stroke={colors.fg}
+        strokeWidth={1.4}
+        fill="none"
+      />
+      <Circle
+        cx={7}
+        cy={6}
+        r={1.8}
+        stroke={colors.fg}
+        strokeWidth={1.4}
+        fill="none"
+      />
+    </Svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <Image
+      source={require('../../design/figma/assets/icon-15x16.png')}
+      style={styles.leadingIconImage}
+    />
   );
 }
 
@@ -136,6 +189,7 @@ export function AddExpenseScreen() {
         <FormField
           label="Name"
           testID="add-expense-name"
+          leadingIcon={<SearchIcon />}
           value={name}
           onChangeText={(text) => {
             setName(text);
@@ -148,6 +202,7 @@ export function AddExpenseScreen() {
         <FormField
           label="Beschreibung"
           testID="add-expense-description"
+          leadingIcon={<MapIcon />}
           value={description}
           onChangeText={setDescription}
         />
@@ -155,6 +210,7 @@ export function AddExpenseScreen() {
         <FormField
           label="Amount"
           testID="add-expense-amount"
+          leadingIcon={<MapIcon />}
           value={amount}
           onChangeText={(text) => {
             setAmount(text);
@@ -168,6 +224,7 @@ export function AddExpenseScreen() {
           <DatePickerField
             label="Select Date"
             testID="add-expense-date"
+            leadingIcon={<CalendarIcon />}
             value={date}
             placeholder="Select Date"
             onChange={(picked) => {
@@ -195,6 +252,7 @@ export function AddExpenseScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgAlt },
+  leadingIconImage: { width: 15, height: 16 },
   header: {
     backgroundColor: colors.surface,
     minHeight: 138,
